@@ -5,66 +5,136 @@ def view_data():
     st.subheader("📊 Elderly & Caregivers Overview")
     data_type = st.selectbox("Choose profile type", ["Elderly", "Caregivers"])
 
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stExpander"] {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 8px;
+            margin-bottom: 6px;
+            background-color: #f9f9f9;
+            transition: all 0.3s ease-in-out;
+        }
+
+        div[data-testid="stExpander"]:hover {
+            background-color: #e9f5ff;
+            border: 1px solid #4fdee3;
+        }
+
+        .expander-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .expander-title .icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        .highlighted {
+            color: red;
+            font-weight: bold;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     if st.button("Show information"):
         try:
-            # Fetch data from the API
             data = fetch_data(data_type.lower())
 
-            # Display Elderly data with tasks and medications
             if data_type == "Elderly":
-                st.write("Elderly:")
+                st.write("### 🏡 Elderly List:")
                 for entry in data:
-                    with st.expander(f"{entry['name']} (ID: {entry['id']})"):
-                        st.markdown(f"**Name:** {entry['name']}")
-                        st.markdown(f"**ID:** {entry['id']}")
-                        st.markdown("**Tasks:**")
-                        for task in entry.get("tasks", []):
-                            st.write(f"- {task['description']} ({task['status']})")
-                        st.markdown("**Medications:**")
-                        for med in entry.get("medications", []):
-                            st.write(f"- {med['name']} ({med['dosage']}, {med['frequency']})")
-                        st.markdown("**Caregivers:**")
-                        for assignment in entry.get("assignments", []):
-                            caregiver_info = fetch_data(f"caregivers/{assignment['caregiver_id']}")
-                            st.write(f"- {caregiver_info['name']} (ID: {caregiver_info['id']})") 
+                    # Determining an icon according to whether there is a caregiver 
+                    icon = "❤️" if entry.get("assignments") else "🧑‍🦳"
+                    
+                    
+                    expander_label = f"{entry['name']} (ID: {entry['id']})"
 
+                    with st.expander(expander_label, expanded=False):
+                        st.markdown(f"### {icon} **{entry['name']}**")
+                        st.markdown(f"🔢 **ID:** {entry['id']}")
 
-            # Display Caregiver data
+                        #Tasks presentation
+                        st.markdown("#### ✅ Tasks:")
+                        if entry.get("tasks"):
+                            for task in entry["tasks"]:
+                                task_status = "🟢" if task['status'] == "complete" else "🔴"
+                                st.markdown(f"{task_status} **{task['description']}** *(Status: {task['status']})*")
+                        else:
+                            st.info("No tasks assigned.")
+
+                        # Medication presentation
+                        st.markdown("#### 💊 Medications:")
+                        if entry.get("medications"):
+                            meds_data = [{"Medication": med["name"], "Dosage": med["dosage"], "Frequency": med["frequency"]}
+                                         for med in entry["medications"]]
+                            st.table(meds_data)
+                        else:
+                            st.warning("No medications assigned.")
+
+                        #Caregivers related to specific elder presentation
+                        st.markdown("#### 👨‍⚕️ Caregivers:")
+                        if entry.get("assignments"):
+                            for assignment in entry["assignments"]:
+                                caregiver_info = fetch_data(f"caregivers/{assignment['caregiver_id']}")
+                                st.success(f"👨‍⚕️ {caregiver_info['name']} (ID: {caregiver_info['id']})")
+                        else:
+                            st.error("No caregivers assigned.")
+
             elif data_type == "Caregivers":
-                st.write("Caregivers:")
+                st.write("### 🏥 Caregivers List:")
                 for caregiver in data:
-                    with st.expander(f"{caregiver['name']} (ID: {caregiver['id']})"):
-                        st.markdown(f"**Bank Name:** {caregiver['bank_name']}")
-                        st.markdown(f"**Bank Account:** {caregiver['bank_account']}")
-                        st.markdown(f"**Branch Number:** {caregiver['branch_number']}")
-                        st.markdown("**Elderly Individuals:**")
-                        for assignment in caregiver.get("assignments", []):
-                            elderly_info = fetch_data(f"elderly/{assignment['elderly_id']}")
-                            st.write(f"- {elderly_info['name']} (ID: {elderly_info['id']})")
-                        
-                        # Format salary details
+                    expander_label = f"{caregiver['name']} (ID: {caregiver['id']})"
+
+                    with st.expander(expander_label, expanded=False):
+                        st.markdown(f"### 👨‍⚕️ Name: **{caregiver['name']}**")
+                        st.markdown(f"🔢 **ID:** {caregiver['id']}")
+
+                        st.markdown("#### 🏦 Bank Details:")
+                        st.markdown(f"- **Bank Name:** {caregiver.get('bank_name', 'N/A')}")
+                        st.markdown(f"- **Bank Account:** {caregiver.get('bank_account', 'N/A')}")
+                        st.markdown(f"- **Branch Number:** {caregiver.get('branch_number', 'N/A')}")
+
+                        # 🏡 Elderly related to specific caregiver presentation
+                        st.markdown("#### 👴 Assigned Elderly:")
+                        if caregiver.get("assignments"):
+                            for assignment in caregiver["assignments"]:
+                                elderly_info = fetch_data(f"elderly/{assignment['elderly_id']}")
+                                st.success(f"👴 {elderly_info['name']} (ID: {elderly_info['id']})")
+                        else:
+                            st.info("No elderly individuals assigned.")
+
+                       
+                        st.markdown("#### 💰 Salary Details:")
                         salary_data = caregiver.get('salary', {})
-                        base_salary = salary_data.get('price', 'N/A')
-                        amount = salary_data.get('amount', 'N/A')
-                        total = salary_data.get('total', 'N/A')
-                        st.markdown(f"**Salary:** Base: {base_salary}, Amount: {amount}, Total: {total}")
+                        st.markdown(f"- **Base Salary:** {salary_data.get('price', 'N/A')}")
+                        st.markdown(f"- **Amount:** {salary_data.get('amount', 'N/A')}")
+                        st.markdown(f"- **Total:** {salary_data.get('total', 'N/A')}")
 
-                        # Optional: Add Saturday and allowance data
+                       
                         saturday_data = caregiver.get('saturday', {})
-                        sat_base = saturday_data.get('price', 'N/A')
-                        sat_amount = saturday_data.get('amount', 'N/A')
-                        sat_total = saturday_data.get('total', 'N/A')
-                        st.markdown(f"**Saturday Pay:** Base: {sat_base}, Amount: {sat_amount}, Total: {sat_total}")
+                        st.markdown("#### 🏖️ Saturday Pay:")
+                        st.markdown(f"- **Base:** {saturday_data.get('price', 'N/A')}")
+                        st.markdown(f"- **Amount:** {saturday_data.get('amount', 'N/A')}")
+                        st.markdown(f"- **Total:** {saturday_data.get('total', 'N/A')}")
 
+                        
                         allowance_data = caregiver.get('allowance', {})
-                        allow_base = allowance_data.get('price', 'N/A')
-                        allow_amount = allowance_data.get('amount', 'N/A')
-                        allow_total = allowance_data.get('total', 'N/A')
-                        st.markdown(f"**Allowance:** Base: {allow_base}, Amount: {allow_amount}, Total: {allow_total}")
+                        st.markdown("#### 🎁 Allowance:")
+                        st.markdown(f"- **Base:** {allowance_data.get('price', 'N/A')}")
+                        st.markdown(f"- **Amount:** {allowance_data.get('amount', 'N/A')}")
+                        st.markdown(f"- **Total:** {allowance_data.get('total', 'N/A')}")
 
-                        # Total bank balance
+                       
                         total_bank = caregiver.get('total_bank', 'N/A')
-                        st.markdown(f"**Total Bank Balance:** {total_bank}")
+                        st.markdown(f"#### 🏦 **Total Bank Balance:** {total_bank}")
 
         except RuntimeError as e:
-            st.error(str(e))
+            st.error(str(e))       

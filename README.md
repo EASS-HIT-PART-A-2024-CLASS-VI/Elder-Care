@@ -15,6 +15,66 @@ The Elder Care Management System is an innovative and user-friendly platform des
 
 ---
 
+## 📂 Project Structure
+```
+Elder-Care/
+│── backend/
+│   │── db/                # Database configuration and connection
+│   │   │── __init__.py
+│   │   │── database.py
+│   │
+│   │── models/            # SQLAlchemy models for database
+│   │   │── __init__.py
+│   │   │── caregiver.py
+│   │   │── caregiver_assignments.py
+│   │   │── elderly.py
+│   │   │── medication.py
+│   │   │── task.py
+│   │
+│   │── routes/            # FastAPI route handlers
+│   │   │── __init__.py
+│   │   │── caregiver_assignments.py
+│   │   │── caregivers.py
+│   │   │── elderly.py
+│   │
+│   │── schemas/           # Pydantic schemas for data validation
+│   │   │── caregiver.py
+│   │   │── caregiver_assignment.py
+│   │   │── elderly.py
+│   │   │── medication.py
+│   │   │── task.py
+│   │
+│   │── utils/             # Utility functions (e.g., PDF generation)
+│   │   │── __init__.py
+│   │   │── pdf_generator.py
+│   │
+│   │── Tests/             # Automated test scripts
+│   │   │── test_api_integration.py
+│   │   │── test_units.py
+│   │
+│   │── Dockerfile         # Backend containerization
+│   │── main.py            # FastAPI application entry point
+│   │── requirements.txt   # Backend dependencies
+│
+│── frontend/
+│   │── components/        # Streamlit UI components
+│   │   │── __init__.py
+│   │   │── add_data.py
+│   │   │── manage_caregivers.py
+│   │   │── manage_elderly.py
+│   │   │── view_data.py
+│   │
+│   │── Dockerfile         # Frontend containerization
+│   │── api_client.py      # Handles API communication
+│   │── requirements.txt   # Frontend dependencies
+│   │── ui.py              # Streamlit main UI file
+│
+│── docker-compose.yml     # Docker configuration for services
+│── README.md              # Project documentation
+│── pytest.ini             # Pytest configuration
+```
+
+
 ## 💻 Technologies Used
 - **FastAPI**: Backend framework.
 - **PostgreSQL**: Database management.
